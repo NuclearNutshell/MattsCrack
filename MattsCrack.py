@@ -42,7 +42,7 @@ def create_org_wordlist(name, dob):
 ##############################
 # PERSONAL WORDLIST FUNCTION #
 ##############################
-def create_person_wordlist(name, dob):
+def create_person_wordlist(name, dob, petNames, nick, hobbies):
   # Split the lists provided in questions by spaces
   name_parts = name.split()
   dob_parts = dob.split()
@@ -134,7 +134,7 @@ def create_person_wordlist(name, dob):
 
   # Call caps combinations function to loop through all combinations of capital letters
   combinations = all_caps_combinations(wordlist)
-  wordlist.append(combinations)
+  wordlist.extend(combinations)
 
   # Deduplicate (can be improved)
   deduplicated_list = [] 
@@ -189,7 +189,7 @@ elif type == "p":
   hobbies = input ("Enter any hobbies/characters/celebs that they like, seperated by spaces: ")
   petNames = input("Enter their pets name seperated by spaces: ")
   file_name = input("Name your wordlist (with .txt as the ext): ")
-  deduplicated_list = create_person_wordlist(name, dob)
+  deduplicated_list = create_person_wordlist(name, dob, petNames, nick, hobbies)
   # Open the file in write mode and write each item on a new line
   with open(file_name, 'w') as file:
     for item in deduplicated_list:
