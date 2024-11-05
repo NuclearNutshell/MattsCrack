@@ -144,10 +144,7 @@ def create_person_wordlist(name, dob):
 
 
 # IDEAS:
-# - Cycle through wordlist and change each character to upper case one by one individually and in groups
 # - Peplace some characters with numbers ie o to 0 etc
-#
-#
 
   # Return the wordlist
   return deduplicated_list
@@ -191,7 +188,7 @@ elif type == "p":
   dob = input("Enter the persons date of birth (dd/mm/yyyy): ")
   hobbies = input ("Enter any hobbies/characters/celebs that they like, seperated by spaces: ")
   petNames = input("Enter their pets name seperated by spaces: ")
-  file_name = input("Name your wordlist: ")
+  file_name = input("Name your wordlist (with .txt as the ext): ")
   deduplicated_list = create_person_wordlist(name, dob)
   # Open the file in write mode and write each item on a new line
   with open(file_name, 'w') as file:
