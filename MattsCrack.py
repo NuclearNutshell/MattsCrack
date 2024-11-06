@@ -1,6 +1,36 @@
 #!/usr/bin/python3
 import itertools
 
+# Dictionary to map letters to potential number replacements
+letter_to_number = {
+    'a': ['4'],
+    'e': ['3'],
+    'i': ['1'],
+    'l': ['1'],
+    'o': ['0'],
+    's': ['5'],
+    't': ['7'],
+}
+
+# Function to replace letters with similar numbers
+def replace_with_numbers(word):
+    if not word:
+        return []
+    
+    replacements = ['']
+    for char in word:
+        if char.lower() in letter_to_number:
+            new_replacements = []
+            for replacement in replacements:
+                new_replacements.append(replacement + char)
+                for number in letter_to_number[char.lower()]:
+                    new_replacements.append(replacement + number)
+            replacements = new_replacements
+        else:
+            replacements = [replacement + char for replacement in replacements]
+
+    return replacements
+
 def create_org_wordlist(name, dob):
   # Split the name and the date of birth by spaces
   name_parts = name.split()
@@ -40,6 +70,7 @@ def create_person_wordlist(name, dob, petNames, nick, hobbies):
   # Initialize an empty set to store the words
   wordlist = set()
 
+  # Combine inputs in different ways
   for part in name_parts + nick_parts + petNames_parts + hobbies_parts: 
     wordlist.update([part, part + yob, part + yob_full, part + db]) 
     wordlist.update([yob + part, yob_full + part, db + part])
@@ -48,10 +79,15 @@ def create_person_wordlist(name, dob, petNames, nick, hobbies):
   symbols = ["!", "?", "*", "#", "$"]
   wordlist.update([word + symbol for word in wordlist for symbol in symbols])
 
-  # Iterate through each combination of capitalisations
-  wordlist.update([''.join(c) for word in wordlist for c in itertools.product(*((char.lower(), char.upper()) for char in word))])
+  # Call number replacment function
+  final_wordlist = set(wordlist) 
+  for word in wordlist: 
+    final_wordlist.update(replace_with_numbers(word))
 
-  return list(wordlist)
+  # Iterate through each combination of capitalisations
+  final_wordlist.update([''.join(c) for word in final_wordlist for c in itertools.product(*((char.lower(), char.upper()) for char in word))])
+
+  return list(final_wordlist)
 
 # Ask the user questions
 type = input("\nTarget type:\n\n[o] Organisation  [p] Person\n\n")
@@ -73,11 +109,9 @@ elif type == "p":
 else:
   print("I gave you two options, chose one of them next time")
   exit
-
 # Open the file in write mode and write each item on a new line 
 with open(file_name, 'w') as file: 
   for item in wordlist: 
     file.write(f"{item}\n")
 
 print(f"Contents of the list have been written to {file_name}")
-exit
