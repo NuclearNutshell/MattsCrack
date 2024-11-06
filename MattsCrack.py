@@ -33,6 +33,7 @@ def replace_with_numbers(word):
 
 def create_org_wordlist(name, dob):
   # Split the name and the date of birth by spaces
+  print("\nHandling answers...")
   name_parts = name.split()
   dob_parts = dob.split()
   # Take year out of dob
@@ -47,6 +48,7 @@ def create_org_wordlist(name, dob):
   symbols = ["!", "?", "*", "#", "$"]
 
   # Combine inputs in different ways
+  print("\nCombining inputs...")
   for part in name_parts: 
     wordlist.update([part, part + yob, part + yob_full, part + db]) 
     wordlist.update([dob_part + part for dob_part in dob_parts])
@@ -55,6 +57,7 @@ def create_org_wordlist(name, dob):
 
 def create_person_wordlist(name, dob, petNames, nick, hobbies):
   # Split the lists provided in questions by spaces
+  print("\nHandling answers...")
   name_parts = name.split()
   dob_parts = dob.split()
   petNames_parts = petNames.split()
@@ -71,20 +74,24 @@ def create_person_wordlist(name, dob, petNames, nick, hobbies):
   wordlist = set()
 
   # Combine inputs in different ways
+  print("\nCombining raw inputs...")
   for part in name_parts + nick_parts + petNames_parts + hobbies_parts: 
     wordlist.update([part, part + yob, part + yob_full, part + db]) 
     wordlist.update([yob + part, yob_full + part, db + part])
   
   # Initialise a list to store commonly used symbols
+  print("\nAppending symbols...")
   symbols = ["!", "?", "*", "#", "$"]
   wordlist.update([word + symbol for word in wordlist for symbol in symbols])
 
   # Call number replacment function
+  print("\nReplacing lettrs with similar numbers...")
   final_wordlist = set(wordlist) 
   for word in wordlist: 
     final_wordlist.update(replace_with_numbers(word))
 
   # Iterate through each combination of capitalisations
+  print("\nIterating through captialisation combinations...")
   final_wordlist.update([''.join(c) for word in final_wordlist for c in itertools.product(*((char.lower(), char.upper()) for char in word))])
 
   return list(final_wordlist)
@@ -113,5 +120,8 @@ else:
 with open(file_name, 'w') as file: 
   for item in wordlist: 
     file.write(f"{item}\n")
+# Count amount of words in file
+with open(file_name, 'r') as file:
+  line_count = sum(1 for line in file)
 
-print(f"Contents of the list have been written to {file_name}")
+print(f"\n{line_count} words have been written to {file_name}")
