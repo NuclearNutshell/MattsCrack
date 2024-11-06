@@ -73,9 +73,11 @@ elif type == "p":
 else:
   print("I gave you two options, chose one of them next time")
   exit
+
 # Open the file in write mode and write each item on a new line 
 with open(file_name, 'w') as file: 
   for item in wordlist: 
     file.write(f"{item}\n")
 
 print(f"Contents of the list have been written to {file_name}")
+exit
