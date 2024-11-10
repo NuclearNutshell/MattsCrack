@@ -128,4 +128,4 @@ with open(file_name, 'w') as file:
 with open(file_name, 'r') as file:
   line_count = sum(1 for line in file)
 
-print(f"\n{line_count} words have been written to {file_name}")
+print(f"\r{line_count} words have been written to {file_name}")
