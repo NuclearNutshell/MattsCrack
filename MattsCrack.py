@@ -49,7 +49,7 @@ def create_org_wordlist(name, dob):
   wordlist = set()
 
   # Initialise a list to store commonly used symbols
-  symbols = ["!", "?", "*", "#", "$"]
+  symbols = ["!", "?", "*", "#", "$", "123", "1234", "123!", "1234!"]
 
   # Combine inputs in different ways
   print("\nCombining inputs...")
@@ -82,7 +82,7 @@ def create_person_wordlist(name, dob, petNames, nick, hobbies):
     wordlist.update([yob + part, yob_full + part, db + part])
   
   # Initialise a list to store commonly used symbols
-  symbols = ["!", "?", "*", "#", "$"]
+  symbols = ["!", "?", "*", "#", "$", "123", "1234", "123!", "1234!"]
   wordlist.update([word + symbol for word in wordlist for symbol in symbols])
 
   # Call number replacment function
