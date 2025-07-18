@@ -55,7 +55,7 @@ def build_base_tokens(name, dob, pet_names, nicknames, hobbies) -> list:
 
     groups = [nm, nk, pt, hb]
     for i in range(len(groups)):
-        for j in range(i+1, len(groups)):
+        for j in range(i + 1, len(groups)):
             for x in groups[i]:
                 for y in groups[j]:
                     if x != y:
@@ -80,42 +80,40 @@ def generate_wordlist(name, dob, pet_names, nicknames, hobbies):
 
 
 def main():
-    p = argparse.ArgumentParser(
-        description="Generate a custom wordlist, optionally zipped."
+    parser = argparse.ArgumentParser(
+        description="Generate a custom wordlist and package it into a ZIP."
     )
-    p.add_argument("name", help="Full name or organisation")
-    p.add_argument("dob", help="Date (dd/mm/yyyy)")
-    p.add_argument("nicknames", help="Space-separated nicknames, or ''")
-    p.add_argument("hobbies", help="Space-separated hobbies, or ''")
-    p.add_argument("pets", help="Space-separated pet names, or ''")
-    p.add_argument(
+    parser.add_argument("name", help="Full name or organisation")
+    parser.add_argument("dob", help="Date (dd/mm/yyyy)")
+    parser.add_argument("nicknames", help="Space-separated nicknames (or '' )")
+    parser.add_argument("hobbies", help="Space-separated hobbies (or '' )")
+    parser.add_argument("pets", help="Space-separated pet names (or '' )")
+    parser.add_argument(
         "-o", "--output",
-        required=True,
-        help="Output path: .txt (plain text) or .zip (compressed)"
+        default="wordlist.zip",
+        help="Output ZIP file (defaults to wordlist.zip)"
     )
-    args = p.parse_args()
+    args = parser.parse_args()
 
-    out_path = args.output
-    is_zip   = out_path.lower().endswith('.zip')
+    zip_path = args.output
+    if not zip_path.lower().endswith(".zip"):
+        zip_path += ".zip"
 
-    if is_zip:
-        # Create a ZIP and stream into wordlist.txt inside it
-        with zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
-            with zf.open('wordlist.txt', 'w') as writer:
-                for pw in generate_wordlist(
-                    args.name, args.dob, args.pets,
-                    args.nicknames, args.hobbies
-                ):
-                    line = (pw + '\n').encode('utf-8')
-                    writer.write(line)
-    else:
-        # Plain-text output
-        with open(out_path, 'w', encoding='utf-8') as fw:
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        # inside the ZIP, the wordlist will be named 'wordlist.txt'
+        with zf.open('wordlist.txt', 'w') as writer:
             for pw in generate_wordlist(
-                args.name, args.dob, args.pets,
-                args.nicknames, args.hobbies
+                args.name,
+                args.dob,
+                args.pets,
+                args.nicknames,
+                args.hobbies
             ):
-                fw.write(pw + '\n')
+                line = (pw + "\n").encode('utf-8')
+                writer.write(line)
+
+    # Optional: print the name of the created ZIP so the caller knows its path
+    print(zip_path)
 
 
 if __name__ == "__main__":
