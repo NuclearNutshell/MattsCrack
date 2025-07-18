@@ -1,10 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import itertools
 import sys
 
-# Dictionary to map letters to potential number replacements
-letter_to_number = {
-    'a': ['4'],
+LETTER_TO_NUMBER = {
+    'a': ['4', '@'],
     'e': ['3'],
     'i': ['1'],
     'l': ['1'],
@@ -13,119 +12,96 @@ letter_to_number = {
     't': ['7'],
 }
 
-# Function to replace letters with similar numbers
-def replace_with_numbers(word):
-    if not word:
-        return []
-    
-    replacements = ['']
-    for char in word:
-        if char.lower() in letter_to_number:
-            new_replacements = []
-            for replacement in replacements:
-                new_replacements.append(replacement + char)
-                for number in letter_to_number[char.lower()]:
-                    new_replacements.append(replacement + number)
-            replacements = new_replacements
-        else:
-            replacements = [replacement + char for replacement in replacements]
+SYMBOLS = ["!", "*", "123", "1234", "12345", "123!", "1234!", "12345!"] # Array of commonly used symbols.
 
-    return replacements
+# Replace lower case letters with their similar numbers.
+def replace_with_numbers(word: str) -> set:
+    reps = ['']
+    for ch in word:
+        next_round = []
+        subs = LETTER_TO_NUMBER.get(ch.lower(), [])
+        for base in reps:
+            next_round.append(base + ch)
+            for s in subs:
+                next_round.append(base + s)
+        reps = next_round
+    return set(reps)
 
-def print_overwrite(word): 
-  sys.stdout.write(f'\r{" " * 20}\r{word}') 
-  sys.stdout.flush()
+# Build a list of tokens using user input.
+def build_base_tokens(name, dob, pet_names, nicknames, hobbies) -> list:
+    nm = set(name.split())
+    nk = set(nicknames.split())
+    pt = set(pet_names.split())
+    hb = set(hobbies.split())
 
-def create_org_wordlist(name, dob):
-  # Split the name and the date of birth by spaces
-  name_parts = name.split()
-  dob_parts = dob.split()
-  # Take year out of dob
-  yob = dob[-2:]
-  yob_full = dob[-4:]
-  db = dob[:2]
+    yob2 = dob[-2:]   # Year of birth short
+    yob4 = dob[-4:]   # Year of birth full
+    d2   = dob[:2]    # Day of birth
 
-  # Initialize an empty set to store the words
-  wordlist = set()
+    # Combine date variants with base tokens.
+    base = set()
+    for part in nm | nk | pt | hb:
+        vs = {
+            part, part+yob2, part+yob4, part+d2,
+            yob2+part, yob4+part, d2+part
+        }
+        base |= vs
 
-  # Initialise a list to store commonly used symbols
-  symbols = ["!", "?", "*", "#", "$", "123", "1234", "123!", "1234!"]
+    # Combine all tokens together.
+    groups = [nm, nk, pt, hb]
+    for i in range(len(groups)):
+        for j in range(i+1, len(groups)):
+            for x in groups[i]:
+                for y in groups[j]:
+                    if x != y:
+                        base.add(x+y)
+                        base.add(y+x)
 
-  # Combine inputs in different ways
-  print("\nCombining inputs...")
-  for part in name_parts: 
-    wordlist.update([part, part + yob, part + yob_full, part + db]) 
-    wordlist.update([dob_part + part for dob_part in dob_parts])
+    return list(base)
 
-  return list(wordlist)
+def main():
+    print("\nWelcome to Matts Crack!")
+    t = input("Target type: [o] Org  [p] Person]\n> ").strip().lower()
+    if t == 'o':
+        name     = input("Organisation names (space-separated): ").strip()
+        dob      = input("Dates (dd/mm/yyyy space-separated): ").strip()
+        nick = pet = hobbies = ""
+    elif t == 'p':
+        name     = input("Person's full name: ").strip()
+        nick     = input("Nicknames (space-separated): ").strip()
+        dob      = input("Date of birth (dd/mm/yyyy): ").strip()
+        hobbies  = input("Hobbies/likes (space-separated): ").strip()
+        pet      = input("Pet names (space-separated): ").strip()
+    else:
+        sys.exit("Invalid choice, exiting.")
 
-def create_person_wordlist(name, dob, petNames, nick, hobbies):
-  # Split the lists provided in questions by spaces
-  name_parts = name.split()
-  dob_parts = dob.split()
-  petNames_parts = petNames.split()
-  nick_parts = nick.split()
-  hobbies_parts = hobbies.split()
+    out_file = input("Output filename (e.g. wordlist.txt): ").strip()
+    count = 0
 
-  # Take year out of dob
-  yob = dob[-2:]
-  yob_full = dob[-4:]
-  # Take day out of dob
-  db = dob[:+2]
+    base_tokens = build_base_tokens(name, dob, pet, nick, hobbies)
 
-  # Initialize an empty set to store the words
-  wordlist = set()
+    with open(out_file, 'w', encoding='utf-8') as fw:
+        for token in base_tokens:
+            for num_variant in replace_with_numbers(token):
+                # build pools: letters get (lower, upper), others stay single
+                pools = [
+                    (c.lower(), c.upper()) if c.isalpha() else (c,)
+                    for c in num_variant
+                ]
+                # iterate all-case permutations without duplicates
+                for caps in itertools.product(*pools):
+                    word = ''.join(caps)
+                    fw.write(word + "\n")
+                    count += 1
+                    # symbol suffixes
+                    for sym in SYMBOLS:
+                        fw.write(word + sym + "\n")
+                        count += 1
 
-  # Combine inputs in different ways
-  for part in name_parts + nick_parts + petNames_parts + hobbies_parts: 
-    wordlist.update([part, part + yob, part + yob_full, part + db]) 
-    wordlist.update([yob + part, yob_full + part, db + part])
-  
-  # Initialise a list to store commonly used symbols
-  symbols = ["!", "?", "*", "#", "$", "123", "1234", "123!", "1234!"]
-  wordlist.update([word + symbol for word in wordlist for symbol in symbols])
+                    if count % 100_000 == 0:
+                        print(f"\rWritten {count:,} words...", end='', flush=True)
 
-  # Call number replacment function
-  final_wordlist = set(wordlist) 
-  for word in wordlist: 
-    final_wordlist.update(replace_with_numbers(word))
-    print_overwrite(word)
+    print(f"\n\nDone. {count:,} words written to {out_file}")
 
-  # Iterate through each combination of capitalisations
-  capital_combinations = [''.join(c) for word in final_wordlist for c in itertools.product(*((char.lower(), char.upper()) for char in word))] 
-  for capital_word in capital_combinations: 
-    print_overwrite(capital_word)
-  final_wordlist.update(capital_combinations)
-
-  return list(final_wordlist)
-
-# Ask the user questions
-type = input("\nTarget type:\n\n[o] Organisation  [p] Person\n\n")
-if type == "o":
-  print("\n\nEnter the following information to generate your wordlist:\n")
-  name = input("Enter the name of the organisation, with any variations seprated by spaces (e.g Doodoo Dyncmics Doodoo Dymamics Ltd): ") # Maybe change this to be comma seperated
-  dob = input("Enter any memorable dates seperated by spaces (e.g Date founded dd/mm/yyyy): ")
-  file_name = input("Name your wordlist: ")
-  wordlist = create_org_wordlist(name, dob)
-elif type == "p":
-  print("Enter the following information to generate your wordlist:\n")
-  name = input("Enter the persons name (e.g John Smith): ")
-  nick = input("Enter the persons nicknames seperated by spaces: ")
-  dob = input("Enter the persons date of birth (dd/mm/yyyy): ")
-  hobbies = input ("Enter any hobbies/characters/celebs that they like, seperated by spaces: ")
-  petNames = input("Enter their pets name seperated by spaces: ")
-  file_name = input("Name your wordlist (with .txt as the ext): ")
-  print("Genrating Wordlist:\n")
-  wordlist = create_person_wordlist(name, dob, petNames, nick, hobbies)
-else:
-  print("I gave you two options, chose one of them next time")
-  exit
-# Open the file in write mode and write each item on a new line 
-with open(file_name, 'w') as file: 
-  for item in wordlist: 
-    file.write(f"{item}\n")
-# Count amount of words in file
-with open(file_name, 'r') as file:
-  line_count = sum(1 for line in file)
-
-print(f"\r{line_count} words have been written to {file_name}")
+if __name__ == "__main__":
+    main()
